@@ -10,11 +10,20 @@ html(lang='en')
   body
 
     table
-      tbody
+      tbody#board
         - for(var i=0; i < 8; i++)
           tr
             - for(var j=0; j < 8; j++)
-              td(data-y=i, data-x=j)
+              if((i+j) % 2 === 1)
+                td.valid(data-y=i, data-x=j)
+                  .flipper
+                    .front
+                    .back
+              else
+                td.invalid(data-y=i, data-x=j)
+                  .flipper
+                    .front
+                    .back
 
     script(src='./js/vendor/jquery-2.1.0.js')
     script(src='./js/source/main.js')
