@@ -5,7 +5,7 @@
 
   var selected;
   var moveTarget;
-  //var totalPieces;
+  var continueTurn = false;
 
   function init(){
     $('#board').on('click', 'td.valid.player.current', select);
@@ -27,8 +27,6 @@
       $($white[i]).append($wPiece);
       $($white[i]).addClass('player').addClass('white').addClass('current');
     }
-
-    //totalPieces = $('.player').length;
   }
 
   function select(){
@@ -54,40 +52,45 @@
     vector.push(finalY - initialY);
 
     if(Math.abs(vector[0]) + Math.abs(vector[1]) === 4){
-      if(direction()){
-        var avgX = average(selected.data('x'), moveTarget.data('x'));
-        var avgY = average(selected.data('y'), moveTarget.data('y'));
-        var $deadPiece = $('td[data-x=' + avgX + '][data-y=' + avgY +']');
+      if(direction(selected, moveTarget)){
+        var $deadPiece = generateDead(selected, moveTarget);
 
-        if($deadPiece.hasClass('player') && !$deadPiece.hasClass('current')){
-
+        if(checkDead($deadPiece)){
           $deadPiece.empty();
           $deadPiece.removeClass('player');
+
           movePiece();
+          if(checkPotential() < 4){
+            continueTurn = true;
+          }else{
+            continueTurn = false;
+          }
+
           endTurn();
         }
       }
     }else if(Math.abs(vector[0]) + Math.abs(vector[1]) === 2){
-      if(direction()){
+      if(direction(selected, moveTarget)){
         movePiece();
+        continueTurn = false;
         endTurn();
       }
     }
   }
 
-  function direction(){
-    if(selected.hasClass('king')){
+  function direction(jQuerySelected, jQueryMoveTarget){
+    if(jQuerySelected.hasClass('king')){
       return true;
     }
 
-    if(selected.hasClass('white')){
-      if(moveTarget.data('y') < selected.data('y')){
+    if(jQuerySelected.hasClass('white')){
+      if(jQueryMoveTarget.data('y') < jQuerySelected.data('y')){
         return true;
       }else{
       return false;
       }
     }else{
-      if(moveTarget.data('y') > selected.data('y')){
+      if(jQueryMoveTarget.data('y') > jQuerySelected.data('y')){
         return true;
       }
       return false;
@@ -133,18 +136,55 @@
   }
 
   function endTurn(){
-    // var numPieces = $('.player').length;
-    //
-    // if(numPieces !== totalPieces){
-    //   totalPieces = numPieces;
-    //   return;
-    // }
+    if(!continueTurn){
+      var $currentPlayer = $('td.player.current');
+      var $otherPlayer = $('td.player');
 
-    //debugger;
-    var $currentPlayer = $('td.player.current');
-    var $otherPlayer = $('td.player');
-
-    $otherPlayer.addClass('current');
-    $currentPlayer.removeClass('current');
+      $otherPlayer.addClass('current');
+      $currentPlayer.removeClass('current');
+    }
   }
+
+  function checkDead(deadPiece){
+    return deadPiece.hasClass('player') && !deadPiece.hasClass('current');
+  }
+
+  function generateDead(jQuerySelected, jQueryMoveTarget){
+    var avgX = average(jQuerySelected.data('x'), jQueryMoveTarget.data('x'));
+    var avgY = average(jQuerySelected.data('y'), jQueryMoveTarget.data('y'));
+    return $('td[data-x=' + avgX + '][data-y=' + avgY +']');
+
+  }
+
+  function checkPotential(){
+    var potentialTargets = [];
+    var translatedX = [];
+    var translatedY = [];
+
+    translatedX.push(moveTarget.data('x') + 2);
+    translatedY.push(moveTarget.data('y') + 2);
+    translatedX.push(moveTarget.data('x') - 2);
+    translatedY.push(moveTarget.data('y') - 2);
+
+
+    for(var j=0; j<2; j++){
+      for(var k=0; k<2; k++){
+        potentialTargets.push($('td[data-x=' + translatedX[j] + '][data-y=' +translatedY[k] +']'));
+      }
+    }
+
+    //prune occupied potentials;
+    var spliceIndeces = [];
+    for(var i=0; i<potentialTargets.length; i++){
+      var $dead = generateDead(moveTarget, potentialTargets[i]);
+      if(potentialTargets[i].hasClass('player') || !checkDead($dead) || !direction(moveTarget, potentialTargets[i])){
+        spliceIndeces.push(i);
+      }
+    }
+
+    console.log(spliceIndeces.length);
+
+    return spliceIndeces.length;
+  }
+
 })();
