@@ -5,7 +5,6 @@
 
   var selected;
   var moveTarget;
-  var continueTurn = false;
 
   function init(){
     $('#board').on('click', 'td.valid.player.current', select);
@@ -60,19 +59,14 @@
           $deadPiece.removeClass('player');
 
           movePiece();
-          if(checkPotential() < 4){
-            continueTurn = true;
-          }else{
-            continueTurn = false;
+          if(checkPotential() > 3){
+            endTurn();
           }
-
-          endTurn();
         }
       }
     }else if(Math.abs(vector[0]) + Math.abs(vector[1]) === 2){
       if(direction(selected, moveTarget)){
         movePiece();
-        continueTurn = false;
         endTurn();
       }
     }
@@ -136,13 +130,11 @@
   }
 
   function endTurn(){
-    if(!continueTurn){
       var $currentPlayer = $('td.player.current');
       var $otherPlayer = $('td.player');
 
       $otherPlayer.addClass('current');
       $currentPlayer.removeClass('current');
-    }
   }
 
   function checkDead(deadPiece){
@@ -181,8 +173,6 @@
         spliceIndeces.push(i);
       }
     }
-
-    console.log(spliceIndeces.length);
 
     return spliceIndeces.length;
   }
